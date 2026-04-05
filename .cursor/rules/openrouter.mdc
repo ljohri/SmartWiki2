@@ -1,0 +1,16 @@
+---
+description: OpenRouter integration defaults and safety
+globs:
+  - app/llm/**
+  - app/services/{classifier.py,synthesizer.py}
+alwaysApply: true
+---
+
+# OpenRouter guardrails
+
+- Use OpenAI Python SDK with `base_url=https://openrouter.ai/api/v1` by default.
+- Configure via env vars: `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`, `OPENROUTER_BASE_URL`, `OPENROUTER_HTTP_REFERER`, `OPENROUTER_TITLE`.
+- Prefer deterministic settings for structural tasks (low temperature).
+- Use structured JSON outputs whenever schema-constrained behavior is needed.
+- Implement retry with exponential backoff for transient failures.
+- Never commit API keys or response payloads containing secrets.

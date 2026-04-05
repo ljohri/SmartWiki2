@@ -1,0 +1,12 @@
+{
+  "name": "smartwiki2-quartz",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Quartz publishing workspace for SmartWiki2",
+  "scripts": {
+    "build": "node scripts/build.mjs"
+  },
+  "dependencies": {
+    "marked": "^15.0.0"
+  }
+}

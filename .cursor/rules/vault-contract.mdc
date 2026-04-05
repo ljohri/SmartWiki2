@@ -1,0 +1,16 @@
+---
+description: Enforce external wiki_vault contract and separation
+globs:
+  - app/**
+  - scripts/**
+alwaysApply: true
+---
+
+# Vault contract guardrails
+
+- Treat `wiki_vault` as external data repo instantiated at runtime.
+- Never move vault content into control repo.
+- Never introduce git submodule/subtree based coupling for vault.
+- Validate required vault directories/files before ingest, lint, query, or publish.
+- Keep error messages explicit and actionable for missing contract paths.
+- Prefer filesystem-contract interfaces over internal package coupling with vault.

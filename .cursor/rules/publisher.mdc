@@ -1,0 +1,16 @@
+---
+description: Enforce Quartz publish invariants
+globs:
+  - app/services/publisher.py
+  - publisher/**
+alwaysApply: true
+---
+
+# Publisher guardrails
+
+- `wiki_vault/content` is the only publishable source of truth.
+- Always sync `wiki_vault/content` into `publisher/quartz/content` before build.
+- Build output must land in `/app/site` (or configured site dir) and be served by FastAPI.
+- Preserve `content/attachments` during sync so asset links stay resolvable.
+- In dev mode, support automatic rebuild on content changes.
+- In prod mode, build on startup and rebuild only via explicit ingest/rebuild actions.

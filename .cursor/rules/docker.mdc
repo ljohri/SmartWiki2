@@ -1,0 +1,15 @@
+---
+description: Container startup sequence contract
+globs:
+  - docker/**
+  - app/main.py
+alwaysApply: true
+---
+
+# Docker/runtime guardrails
+
+- Container startup must run this order: prepare vault path -> instantiate vault -> validate contract -> sync/build site -> start FastAPI.
+- Serve API and published site from the same container/process boundary.
+- Keep secrets out of image layers; use env vars/runtime mounts.
+- Support SSH-based vault access through agent forwarding or runtime credentials.
+- Do not auto-push vault git changes from startup or ingest flows.
