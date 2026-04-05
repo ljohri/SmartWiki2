@@ -13,17 +13,18 @@ run:
 test:
 	$(PYTHON) -m pytest -q
 
+# Use bash explicitly so scripts run without relying on the executable bit (avoids Permission denied).
 bootstrap-vault:
-	./scripts/bootstrap_vault.sh
+	bash scripts/bootstrap_vault.sh
 
 clone-vault:
-	./scripts/clone_vault.sh
+	bash scripts/clone_vault.sh
 
 rebuild-site:
-	./scripts/rebuild_site.sh
+	bash scripts/rebuild_site.sh
 
 lint-wiki:
-	./scripts/lint_wiki.sh
+	bash scripts/lint_wiki.sh
 
 pull-vault:
 	@if [ ! -d wiki_vault/.git ]; then echo "wiki_vault is not a git repo"; exit 1; fi
