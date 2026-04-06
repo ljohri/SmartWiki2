@@ -122,6 +122,51 @@ flowchart TD
   <text class="txt" x="620" y="236">content sync + build</text>
 </svg>
 
+## 3A) Karpathy Knowledge Store Model (Target)
+
+![Karpathy-style knowledge store model for SmartWiki2](docs/karpathy-knowledge-store.svg)
+
+### SVG: LLM authoring lifecycle
+
+![LLM authoring lifecycle for SmartWiki2](docs/llm-authoring-lifecycle.svg)
+
+This model extends the baseline architecture with explicit capability bands:
+
+1. **Data ingest**
+   - heterogeneous source artifacts (articles, papers, repos, datasets, images, clips)
+   - normalized into `wiki_vault/raw/**` and optional extraction outputs
+
+2. **LLM engine**
+   - compile raw materials into durable pages
+   - answer questions from vault context
+   - lint/repair wiki quality
+   - maintain indexes, summaries, and links
+
+3. **Knowledge store**
+   - durable markdown graph in `wiki_vault/content/**`
+   - canonical page classes, frontmatter contract, and attachments
+   - single publish source for Quartz
+
+4. **Outputs and loopback**
+   - markdown pages (current primary output)
+   - optional slides/charts/reports generated from wiki state
+   - loopback path that files derived artifacts back into wiki content
+
+5. **Frontend and operations**
+   - editor-first workflow (Obsidian/Markdown tools)
+   - API/CLI workflows for ingest, lint, rebuild, query
+
+### Capability mapping: current vs target
+
+| Capability from model | Current baseline in repo | Planned expansion |
+|---|---|---|
+| Raw ingest registry | `POST /api/ingest` registers sources + logs | Add extraction and richer source typing |
+| Compile raw -> wiki | manual authoring in `content/**` | LLM-assisted authoring/upsert passes |
+| Q&A over knowledge store | `POST /api/query` with OpenRouter | Better retrieval ranking + uncertainty handling |
+| Linting and health checks | `/api/lint` rules + link checks | semantic duplicate/orphan repair and guided fixes |
+| Indexing and backlinks | manual page maintenance | automated index/backlink maintenance |
+| Output loopback (slides/charts) | not yet | add exporters and write-back workflow |
+
 ## 4) Repository Layout and Responsibilities
 
 ### `app/`

@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 760" width="1280" height="760" role="img" aria-labelledby="title desc">
+  <title id="title">Karpathy-style knowledge store model for SmartWiki2</title>
+  <desc id="desc">Data ingest and tools feed an LLM engine which writes to a wiki knowledge store and exports outputs, with frontend views and future explorations</desc>
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#475569"/>
+    </marker>
+    <style>
+      .section { fill: #ffffff; stroke: #94a3b8; stroke-width: 1.25; rx: 12; }
+      .title { font: 700 18px ui-sans-serif, system-ui, sans-serif; fill: #0f172a; letter-spacing: 1px; }
+      .label { font: 600 14px ui-sans-serif, system-ui, sans-serif; fill: #0f172a; }
+      .small { font: 12px ui-sans-serif, system-ui, sans-serif; fill: #334155; }
+      .mono { font: 12px ui-monospace, monospace; fill: #334155; }
+      .box { fill: #f8fafc; stroke: #64748b; stroke-width: 1.2; rx: 8; }
+      .boxGreen { fill: #eef6e8; stroke: #658a4d; stroke-width: 1.2; rx: 8; }
+      .boxBlue { fill: #eaf1ff; stroke: #4b6cb7; stroke-width: 1.2; rx: 8; }
+      .boxPurple { fill: #efedff; stroke: #6b5bd2; stroke-width: 1.2; rx: 8; }
+      .boxOrange { fill: #fff4e6; stroke: #c0782f; stroke-width: 1.2; rx: 8; }
+      .line { stroke: #475569; stroke-width: 1.5; fill: none; marker-end: url(#arr); }
+      .dashed { stroke-dasharray: 5 4; }
+      .muted { fill: #64748b; font: 12px ui-sans-serif, system-ui, sans-serif; }
+    </style>
+  </defs>
+
+  <text class="title" x="36" y="34">KARPATHY-STYLE KNOWLEDGE STORE (SMARTWIKI2 TARGET MODEL)</text>
+
+  <!-- Data ingest -->
+  <rect class="section" x="30" y="60" width="280" height="300"/>
+  <text class="label" x="46" y="90">Data Ingest</text>
+  <rect class="box" x="52" y="108" width="236" height="38"/><text class="small" x="68" y="132">Articles / papers / repos / datasets</text>
+  <rect class="box" x="52" y="156" width="236" height="38"/><text class="small" x="68" y="180">Images / screenshots / notes dumps</text>
+  <rect class="box" x="52" y="204" width="236" height="38"/><text class="small" x="68" y="228">Web clips and source exports</text>
+  <rect class="boxBlue" x="52" y="262" width="236" height="74"/>
+  <text class="small" x="68" y="286">Raw stash (vault contract)</text>
+  <text class="mono" x="68" y="306">wiki_vault/raw/**</text>
+  <text class="muted" x="68" y="324">Original artifacts remain immutable</text>
+
+  <!-- Extra tools -->
+  <rect class="section" x="330" y="180" width="210" height="180"/>
+  <text class="label" x="348" y="210">Extra tools</text>
+  <rect class="boxGreen" x="350" y="226" width="170" height="50"/>
+  <text class="small" x="365" y="248">Search + retrieval</text>
+  <text class="mono" x="365" y="266">UI and CLI</text>
+  <rect class="boxGreen" x="350" y="288" width="170" height="50"/>
+  <text class="small" x="365" y="312">CLI utilities</text>
+  <text class="mono" x="365" y="330">lint / rebuild / pull</text>
+
+  <!-- LLM engine -->
+  <rect class="section" x="560" y="60" width="350" height="360"/>
+  <text class="label" x="578" y="90">LLM Engine</text>
+  <rect class="boxPurple" x="582" y="108" width="306" height="58"/>
+  <text class="small" x="602" y="132">Compile</text>
+  <text class="mono" x="602" y="151">raw artifacts -> source-notes / concepts</text>
+  <rect class="boxPurple" x="582" y="178" width="306" height="58"/>
+  <text class="small" x="602" y="202">Q and A</text>
+  <text class="mono" x="602" y="221">retrieve vault context and answer with citations</text>
+  <rect class="boxPurple" x="582" y="248" width="306" height="58"/>
+  <text class="small" x="602" y="272">Linting and repair</text>
+  <text class="mono" x="602" y="291">detect gaps, broken links, stale pages</text>
+  <rect class="boxPurple" x="582" y="318" width="306" height="82"/>
+  <text class="small" x="602" y="342">Indexing and linking</text>
+  <text class="mono" x="602" y="361">summaries, backlinks, categories</text>
+  <text class="muted" x="602" y="380">writes durable markdown to content/</text>
+
+  <!-- Knowledge store -->
+  <rect class="section" x="930" y="60" width="320" height="360"/>
+  <text class="label" x="948" y="90">Knowledge Store</text>
+  <rect class="boxBlue" x="952" y="108" width="276" height="292"/>
+  <text class="small" x="972" y="132">Wiki (.md)</text>
+  <text class="mono" x="972" y="152">wiki_vault/content/**</text>
+  <text class="small" x="972" y="182">Projects / concepts / entities</text>
+  <text class="small" x="972" y="204">Source-notes / syntheses / logs</text>
+  <text class="small" x="972" y="226">Aliases / backlinks / categories</text>
+  <text class="small" x="972" y="248">Attachments</text>
+  <text class="small" x="972" y="270">Quartz publish source-of-truth</text>
+  <text class="muted" x="972" y="298">Current implementation already syncs + builds this</text>
+
+  <!-- Outputs -->
+  <rect class="section" x="180" y="450" width="780" height="126"/>
+  <text class="label" x="198" y="480">Outputs</text>
+  <rect class="boxOrange" x="202" y="494" width="220" height="64"/>
+  <text class="small" x="224" y="520">Markdown pages</text>
+  <text class="mono" x="224" y="540">wiki content updates</text>
+  <rect class="boxOrange" x="444" y="494" width="220" height="64"/>
+  <text class="small" x="466" y="520">Slides / reports</text>
+  <text class="mono" x="466" y="540">derived artifacts</text>
+  <rect class="boxOrange" x="686" y="494" width="250" height="64"/>
+  <text class="small" x="706" y="520">Charts / visual summaries</text>
+  <text class="mono" x="706" y="540">filed back into wiki</text>
+
+  <!-- Frontend -->
+  <rect class="section" x="30" y="610" width="1220" height="120"/>
+  <text class="label" x="48" y="640">IDE Frontend</text>
+  <rect class="box" x="52" y="654" width="220" height="54"/><text class="small" x="82" y="686">Obsidian / Markdown editor</text>
+  <rect class="box" x="286" y="654" width="160" height="54"/><text class="small" x="320" y="686">Raw data</text>
+  <rect class="box" x="460" y="654" width="160" height="54"/><text class="small" x="510" y="686">Wiki</text>
+  <rect class="box" x="634" y="654" width="190" height="54"/><text class="small" x="678" y="686">Visualizations</text>
+  <rect class="box" x="838" y="654" width="190" height="54"/><text class="small" x="897" y="686">Slides</text>
+  <rect class="box" x="1042" y="654" width="186" height="54"/><text class="small" x="1096" y="686">API</text>
+
+  <!-- Flow lines -->
+  <line class="line" x1="310" y1="280" x2="350" y2="252"/>
+  <line class="line" x1="310" y1="280" x2="582" y2="136"/>
+  <line class="line" x1="520" y1="252" x2="582" y2="272"/>
+  <line class="line" x1="520" y1="312" x2="582" y2="347"/>
+  <line class="line" x1="888" y1="136" x2="952" y2="136"/>
+  <line class="line" x1="888" y1="206" x2="952" y2="186"/>
+  <line class="line" x1="888" y1="276" x2="952" y2="236"/>
+  <line class="line" x1="888" y1="358" x2="952" y2="286"/>
+  <line class="line" x1="736" y1="400" x2="736" y2="494"/>
+  <line class="line" x1="1090" y1="400" x2="1090" y2="494"/>
+  <line class="line" x1="1090" y1="558" x2="1090" y2="654"/>
+
+  <!-- Future explorations -->
+  <rect class="section dashed" x="980" y="450" width="270" height="126"/>
+  <text class="label" x="998" y="480">Future explorations</text>
+  <text class="small" x="998" y="506">Synthetic data generation</text>
+  <text class="small" x="998" y="530">Fine-tuning on stable wiki snapshots</text>
+  <text class="small" x="998" y="554">Productized agent workflows</text>
+</svg>
