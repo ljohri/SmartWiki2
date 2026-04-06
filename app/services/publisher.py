@@ -23,6 +23,8 @@ def build_site(settings: Settings) -> Path:
     quartz_root = settings.resolved_quartz_dir
     site_dir = settings.resolved_site_dir
     ensure_dir(site_dir)
+    # Ensure node_modules exists (fresh clone / local dev without Docker npm install).
+    subprocess.run(["npm", "install"], cwd=quartz_root, check=True)
     subprocess.run(["npm", "run", "build"], cwd=quartz_root, check=True)
     generated = quartz_root / "public"
     if generated.exists():
