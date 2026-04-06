@@ -2,7 +2,7 @@ PYTHON ?= python3
 UVICORN ?= uvicorn
 APP_MODULE ?= app.main:app
 
-.PHONY: install run test bootstrap-vault clone-vault rebuild-site lint-wiki pull-vault commit-vault push-vault
+.PHONY: install run test bootstrap-vault clone-vault ingest-scan rebuild-site lint-wiki pull-vault commit-vault push-vault
 
 install:
 	$(PYTHON) -m pip install -r requirements.txt
@@ -19,6 +19,9 @@ bootstrap-vault:
 
 clone-vault:
 	bash scripts/clone_vault.sh
+
+ingest-scan:
+	bash scripts/ingest_scan.sh
 
 rebuild-site:
 	bash scripts/rebuild_site.sh

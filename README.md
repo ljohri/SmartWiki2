@@ -35,7 +35,8 @@ Current vs roadmap in this repo:
 
 - **Implemented now**
   - deterministic publish pipeline from `wiki_vault/content` to static site
-  - ingest registration (`sources.jsonl` + `logs/log.md`) with rebuild
+  - ingest registry + SQLite tracking (`sources.jsonl`, `logs/log.md`, `manifests/ingest.sqlite`) with rebuild
+  - raw scanning with transcript export to `exports/transcripts/` and source-note authoring in `content/source-notes/`
   - LLM-enabled `POST /api/query` over vault context
 - **Planned next (from AGENTS contract + this model)**
   - ingest-time authoring (`source-note`, concept/entity/project updates)
@@ -180,7 +181,7 @@ Modes:
 Understanding what “shows up” is important:
 
 - **Published pages** come from **`wiki_vault/content`** (Markdown with the required frontmatter). The publisher syncs that tree into Quartz and builds the static site.
-- **`wiki_vault/raw`** holds original artifacts (PDFs, notes exports, etc.). Those paths are **not** automatically turned into full wiki pages. You typically keep originals there, optionally **register** them via ingest, and **write or update** durable pages under `content/` (for example a `source-note` or `synthesis`) that summarize or link to the material.
+- **`wiki_vault/raw`** holds original artifacts (PDFs, notes exports, etc.). The ingestor can now scan this tree, track file state in vault-local SQLite, extract text when possible, and generate/update `source-note` pages while keeping all artifacts inside the vault.
 - **`wiki_vault/content/attachments`** is for images and other assets you embed from Markdown; those files are published together with your pages.
 
 ### One new Markdown page (most common)
@@ -195,7 +196,7 @@ Understanding what “shows up” is important:
 ### One or more original files (sources, not yet pages)
 
 1. Copy files into the appropriate folder under `wiki_vault/raw/...` (for example `raw/pdfs/`, `raw/misc/`).
-2. **Optional but useful:** register each file with the ingest API so it is recorded in `manifests/sources.jsonl` and a line is appended to `content/logs/log.md`:
+2. Ingest each file with the API so it is tracked in `manifests/ingest.sqlite`, registered in `manifests/sources.jsonl`, and logged in `content/logs/log.md`:
 
    ```bash
    curl -X POST http://localhost:8000/api/ingest \
@@ -203,7 +204,9 @@ Understanding what “shows up” is important:
      -d '{"source_path":"./wiki_vault/raw/misc/notes.txt"}'
    ```
 
-   Ingest also triggers a **publish rebuild**; it does **not** by itself create a new Markdown page from arbitrary file types.
+   Ingest also triggers a **publish rebuild** and writes vault-local authoring artifacts:
+   - transcript export in `exports/transcripts/<source_id>.md`
+   - source note in `content/source-notes/<slug>-<id>.md`
 
 3. **Add durable wiki content** under `wiki_vault/content/...` (for example a `source-note` or `synthesis`) that describes the material and links to the file path or filename as needed.
 4. Rebuild if you only edited `content/` without hitting ingest (see “One new Markdown page” above).
@@ -214,6 +217,12 @@ Understanding what “shows up” is important:
 2. For each source you want tracked, call **`POST /api/ingest`** with each path (or automate that with a small shell loop on your machine).
 3. Add or update the Markdown pages under `content/` that reference them (one page per topic, or a single index page with links).
 4. Run **`make rebuild-site`** or **`POST /api/rebuild`** once at the end if you did not rely on the dev watcher.
+
+   For batch ingestion from the raw tree, run:
+
+   ```bash
+   make ingest-scan
+   ```
 
 ### Quick checklist
 
@@ -234,11 +243,11 @@ This section expands the flows above. The **existing publish pipeline is unchang
 | | **Authoring** | **Ingesting** (API) |
 |---|----------------|---------------------|
 | **What it is** | You create or edit durable wiki pages (Markdown + frontmatter) and assets under `wiki_vault/content/`. | You tell SmartWiki2 about a **file on disk** (usually under `wiki_vault/raw/`) via `POST /api/ingest`. |
-| **Primary output** | New or updated `.md` pages (and attachments) that the site can render. | A JSON line in `manifests/sources.jsonl`, a line in `content/logs/log.md`, then a **full publish rebuild**. |
-| **LLM today** | Not required. You write pages by hand (or use external tools). | **Not used.** Ingest does not call OpenRouter. |
+| **Primary output** | New or updated `.md` pages (and attachments) that the site can render. | SQLite registry rows in `manifests/ingest.sqlite`, `sources.jsonl` entries, transcript exports, `source-note` pages, log entries, then a publish rebuild. |
+| **LLM today** | Not required. You write pages by hand (or use external tools). | **Not used.** Ingest remains deterministic and local; no model calls in ingest path. |
 | **LLM elsewhere** | `POST /api/query` uses the LLM to answer questions **from** existing `content/` text (optional key). | Same vault; query is separate from ingest. |
 
-**Agents.md** describes a richer future ingest pipeline (extract text, auto `source-note`s, linker passes, index updates). The **current** program implements registration + log + rebuild; **authoring** is how you add the actual narrative pages and `[[wikilinks]]`.
+The current ingest implementation now includes deterministic extraction + source-note authoring, but still avoids remote model calls during ingest. Richer semantic linking/index automation remains a roadmap item.
 
 ### End-to-end data flow (unchanged)
 
@@ -272,17 +281,21 @@ Use this when a **source file already exists** on the filesystem path you pass (
 
 1. **Resolve** `wiki_vault` via the same rules as the rest of the app (`WIKI_VAULT_PATH`, `./wiki_vault`, or container `/app/wiki_vault`).
 2. **Validate** the `source_path` exists; if not, HTTP 404.
-3. **Register** the source: append one JSON object per line to `manifests/sources.jsonl` with a generated `source_id` (derived from the filename stem), path, and timestamp metadata.
-4. **Log**: append a bullet line to `content/logs/log.md` noting the ingest.
-5. **Publish**: run the same **sync + Quartz build** as a manual rebuild—copy `wiki_vault/content` into `publisher/quartz/content`, build, copy output to `/app/site` (or `SMARTWIKI_SITE_DIR`).
+3. **Track** file fingerprint state (sha256/size/mtime/type/status) in `manifests/ingest.sqlite` (vault-local SQLite database).
+4. **Extract** text into `exports/transcripts/<source_id>.md` when supported (txt/md/csv/json/yaml/pdf/docx/pptx).
+5. **Author** or refresh `content/source-notes/<slug>-<source_id>.md` with required frontmatter and source metadata.
+6. **Register** source metadata in `manifests/sources.jsonl` (deduped by `source_id`).
+7. **Log**: append a bullet line to `content/logs/log.md` noting the ingest.
+8. **Publish**: run the same **sync + Quartz build** as a manual rebuild—copy `wiki_vault/content` into `publisher/quartz/content`, build, copy output to `/app/site` (or `SMARTWIKI_SITE_DIR`).
 
 **What ingest does *not* do today**
 
-- It does **not** read PDF/video/binary content, extract text, or auto-generate Markdown pages.
-- It does **not** run the LLM or auto-insert `[[wikilinks]]`.
-- It does **not** modify `content/index.md` except indirectly if you edit it yourself.
+- It does **not** send source contents outside the vault (no external persistence or outbound data writes).
+- It does **not** call the LLM during ingest.
+- It does **not** auto-maintain semantic links/indexes beyond deterministic source-note generation.
+- It does **not** modify `content/index.md` unless you update it explicitly.
 
-After ingest, **authoring** is still how new knowledge appears as readable wiki pages: create or update Markdown under `content/` that references the material.
+After ingest, you can keep authoring manually; ingest-generated `source-note` pages are a starting point for richer synthesis and linking.
 
 ### Typical combined workflows
 
@@ -302,7 +315,7 @@ After ingest, **authoring** is still how new knowledge appears as readable wiki 
 **C — Batch of drops**
 
 1. Copy many files into `raw/...`.
-2. Loop `curl` ingest per file **or** ingest only the ones you care to register; others remain on disk unregistered.
+2. Run `make ingest-scan` (or `POST /api/ingest/scan`) to ingest only new/changed files from `raw/**`.
 3. Author or update one or more `content/` pages that tie the batch together (index, per-source notes, synthesis).
 4. One final `POST /api/rebuild` if needed.
 
@@ -310,11 +323,13 @@ After ingest, **authoring** is still how new knowledge appears as readable wiki 
 
 - **Today**: **`POST /api/query`** is the only endpoint that calls OpenRouter (when `OPENROUTER_API_KEY` is set). It answers using excerpts from existing `content/` pages—it does not write the vault.
 - **Roadmap (Agents.md)**: ingest could later add extraction, classification, auto `source-note` creation, linker passes, and index/log maintenance. When that exists, it will still be clearest to treat those as **writes to `wiki_vault/`** followed by the **same** publish pipeline.
+- **Roadmap (Agents.md)**: keep expanding semantic classification/linking/index maintenance on top of the current vault-local ingestion database and source-note flow.
 
 ## API Endpoints
 
 - `GET /api/health`
 - `POST /api/ingest`
+- `POST /api/ingest/scan`
 - `POST /api/query`
 - `GET /api/lint`
 - `POST /api/rebuild`
@@ -445,6 +460,16 @@ curl -X POST http://localhost:8000/api/ingest \
 ```
 
 This appends to `wiki_vault/manifests/sources.jsonl`, updates logs, and triggers a publish rebuild.
+It also updates vault-local SQLite tracking (`manifests/ingest.sqlite`), writes a transcript in
+`exports/transcripts/`, and creates/refreshes a source note in `content/source-notes/`.
+
+To scan and ingest all new/changed files in `raw/**`:
+
+```bash
+make ingest-scan
+# or
+curl -X POST http://localhost:8000/api/ingest/scan
+```
 
 ### 8) Query with OpenRouter-backed retrieval
 
@@ -506,6 +531,7 @@ Wiki operations:
 ```bash
 make lint-wiki
 make rebuild-site
+make ingest-scan
 ```
 
 Ingest and query via API:
@@ -514,6 +540,8 @@ Ingest and query via API:
 curl -X POST http://localhost:8000/api/ingest \
   -H "content-type: application/json" \
   -d '{"source_path":"./wiki_vault/raw/misc/example.txt"}'
+
+curl -X POST http://localhost:8000/api/ingest/scan
 
 curl -X POST http://localhost:8000/api/query \
   -H "content-type: application/json" \

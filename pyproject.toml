@@ -17,6 +17,9 @@ dependencies = [
   "PyYAML>=6.0.1",
   "watchdog>=4.0.0",
   "httpx>=0.27.0",
+  "pypdf",
+  "python-docx",
+  "python-pptx",
 ]
 
 [project.optional-dependencies]

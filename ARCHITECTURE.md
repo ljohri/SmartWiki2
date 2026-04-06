@@ -160,7 +160,7 @@ This model extends the baseline architecture with explicit capability bands:
 
 | Capability from model | Current baseline in repo | Planned expansion |
 |---|---|---|
-| Raw ingest registry | `POST /api/ingest` registers sources + logs | Add extraction and richer source typing |
+| Raw ingest registry | `POST /api/ingest` + `POST /api/ingest/scan` track files in `manifests/ingest.sqlite` and `sources.jsonl` | Add richer enrichment and job orchestration |
 | Compile raw -> wiki | manual authoring in `content/**` | LLM-assisted authoring/upsert passes |
 | Q&A over knowledge store | `POST /api/query` with OpenRouter | Better retrieval ranking + uncertainty handling |
 | Linting and health checks | `/api/lint` rules + link checks | semantic duplicate/orphan repair and guided fixes |
@@ -180,7 +180,7 @@ This model extends the baseline architecture with explicit capability bands:
   - path resolution for vault, Quartz workspace, and site output
 - `api/`
   - `health.py`: basic service health
-  - `ingest.py`: source registration/log update + rebuild trigger
+  - `ingest.py`: single-file and scan ingestion, then rebuild trigger
   - `query.py`: retrieval context assembly + OpenRouter call
   - `lint.py`: lint pass over vault
   - `rebuild.py`: explicit publish rebuild endpoint
@@ -190,7 +190,8 @@ This model extends the baseline architecture with explicit capability bands:
 - `services/`
   - `vault_loader.py`: runtime vault resolution + contract validation
   - `publisher.py`: content sync, Quartz build, dev watcher
-  - `ingester.py`: sources manifest append + log append
+  - `ingester.py`: stable source IDs + manifest/log writes
+  - `raw_ingestor.py`: raw scan, SQLite tracking, extraction, source-note authoring
   - `linker.py`: wikilink extraction and missing link detection
   - `linter.py`: vault lint checks
   - `classifier.py`, `synthesizer.py`: LLM service wrappers
@@ -387,9 +388,16 @@ sequenceDiagram
 ### Ingest flow
 1. `POST /api/ingest` receives source path.
 2. Validates source file exists.
-3. Registers source in `manifests/sources.jsonl`.
-4. Appends log entry to `content/logs/log.md`.
-5. Triggers publish sync/build.
+3. Tracks file fingerprint metadata in vault-local SQLite (`manifests/ingest.sqlite`).
+4. Extracts text to `exports/transcripts/<source_id>.md` when supported.
+5. Creates or updates a `content/source-notes/*.md` page with required frontmatter.
+6. Registers source in `manifests/sources.jsonl` and appends log entry to `content/logs/log.md`.
+7. Triggers publish sync/build.
+
+### Ingest scan flow
+1. `POST /api/ingest/scan` walks `wiki_vault/raw/**`.
+2. New or changed files are ingested; unchanged files are skipped.
+3. Rebuild runs only when at least one file changed.
 
 ### Query flow
 1. `POST /api/query` receives question.
@@ -418,6 +426,7 @@ In dev mode, a file watcher monitors `wiki_vault/content` and performs rebuilds 
 
 - `GET /api/health`
 - `POST /api/ingest`
+- `POST /api/ingest/scan`
 - `POST /api/query`
 - `GET /api/lint`
 - `POST /api/rebuild`
@@ -447,8 +456,8 @@ In dev mode, a file watcher monitors `wiki_vault/content` and performs rebuilds 
 The architecture is designed for progressive hardening:
 
 1. **Ingestion pipeline deepening**
-   - text extraction/OCR adapters under `services/ingester.py`
-   - structured manifests and job tracking
+   - richer extraction/OCR adapters and quality scoring
+   - queue-based job orchestration and retry controls
 
 2. **Query quality**
    - better retrieval ranking and synthesis preference
