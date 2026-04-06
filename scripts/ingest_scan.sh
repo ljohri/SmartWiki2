@@ -1,4 +1,8 @@
 #!/usr/bin/env zsh
 set -euo pipefail
 
-python3 -m app.services.ingest_scan_cli
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+PY="${ROOT}/.venv/bin/python3"
+[[ -x "$PY" ]] || PY="${PYTHON:-python3}"
+cd "$ROOT" || exit 1
+exec "$PY" -m app.services.ingest_scan_cli

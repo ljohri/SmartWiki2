@@ -23,8 +23,9 @@ class Settings(BaseSettings):
     wiki_vault_git_url: str = Field(default="", alias="WIKI_VAULT_GIT_URL")
 
     smartwiki_env: str = Field(default="dev", alias="SMARTWIKI_ENV")
-    smartwiki_site_dir: str = Field(default="/app/site", alias="SMARTWIKI_SITE_DIR")
-    smartwiki_quartz_dir: str = Field(default="/app/publisher/quartz", alias="SMARTWIKI_QUARTZ_DIR")
+    # Relative to process cwd (repo root for Makefile/scripts and Docker WORKDIR /app).
+    smartwiki_site_dir: str = Field(default="./site", alias="SMARTWIKI_SITE_DIR")
+    smartwiki_quartz_dir: str = Field(default="publisher/quartz", alias="SMARTWIKI_QUARTZ_DIR")
     smartwiki_log_level: str = Field(default="INFO", alias="SMARTWIKI_LOG_LEVEL")
 
     @property
