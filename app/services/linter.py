@@ -6,6 +6,7 @@ from pathlib import Path
 from app.services.frontmatter import validate_frontmatter_file
 from app.services.linker import collect_markdown_pages, find_missing_links
 from app.services.pdf_generator import collect_vault_pages, generate_pdf, insert_pdf_link, pdf_path_for
+from app.services.vault_structure import generate_vault_structure
 
 
 def lint_vault(vault_root: Path, stale_days: int = 180) -> list[str]:
@@ -32,6 +33,9 @@ def lint_vault(vault_root: Path, stale_days: int = 180) -> list[str]:
         mtime = datetime.fromtimestamp(page.stat().st_mtime, tz=timezone.utc)
         if mtime < stale_cutoff:
             errors.append(f"{page}: stale page (mtime older than {stale_days} days)")
+
+    # Regenerate the vault file-structure manifest
+    generate_vault_structure(vault_root)
 
     # Generate a PDF for every vault markdown page and insert a back-link
     for page in collect_vault_pages(vault_root):
