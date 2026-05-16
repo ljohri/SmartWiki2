@@ -488,6 +488,19 @@ make rebuild-site
 
 ## End-to-End Setup (Docker)
 
+### Docker Compose (local vault bind mount)
+
+```bash
+# Optional: adjust DOCKER_WIKI_VAULT_HOST in .env (defaults to ./wiki_vault)
+docker compose up --build
+```
+
+This uses:
+- `env_file: .env` for API keys and runtime settings
+- `DOCKER_WIKI_VAULT_HOST:/app/wiki_vault` for vault bind mount
+
+Stop with `Ctrl+C` (or run detached with `docker compose up --build -d`).
+
 ### Runtime clone mode
 
 ```bash
@@ -568,6 +581,12 @@ Build and run:
 ```bash
 docker build -f docker/Dockerfile -t smartwiki2 .
 docker run --rm -p 8000:8000 -e OPENROUTER_API_KEY=... -e WIKI_VAULT_GIT_URL=git@github.com:ljohri/wiki_vault.git smartwiki2
+```
+
+Compose (recommended for local vault workflows):
+
+```bash
+docker compose up --build
 ```
 
 SSH support notes:

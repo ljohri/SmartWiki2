@@ -1,0 +1,13 @@
+services:
+  smartwiki2:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: smartwiki2:local
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - "${DOCKER_WIKI_VAULT_HOST:-./wiki_vault}:/app/wiki_vault"
